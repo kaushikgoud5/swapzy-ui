@@ -32,7 +32,7 @@ export function NavigationBar() {
                 >
                   <Icon
                     className={`w-5 h-5 ${isActive ? 'text-purple-600' : 'text-muted-foreground'}`}
-                    fill={isActive && item.id === 'discover' ? 'none' : 'none'}
+                    fill="none"
                   />
                 </motion.div>
 

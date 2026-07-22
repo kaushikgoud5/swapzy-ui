@@ -1,24 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { notificationService } from '../services/notificationService';
+import { notificationService, type Notification } from '../services/notificationService';
 
 export const NOTIFICATIONS_KEY = ['notifications'] as const;
 
 export function useNotifications() {
-  return useQuery({
+  return useQuery<Notification[], Error, Notification[]>({
     queryKey: NOTIFICATIONS_KEY,
-    queryFn: notificationService.getNotifications,
+    queryFn: () => notificationService.getNotifications(),
     refetchInterval: 30_000,
     select: (data) => data.slice(0, 50),
   });
 }
 
-export function useUnreadCount() {
-  return useQuery({
+export function useUnreadCount(): number {
+  const { data } = useQuery<Notification[], Error, number>({
     queryKey: NOTIFICATIONS_KEY,
-    queryFn: notificationService.getNotifications,
+    queryFn: () => notificationService.getNotifications(),
     refetchInterval: 30_000,
     select: (data) => data.filter((n) => !n.isRead).length,
   });
+  return data ?? 0;
 }
 
 export function useMarkAsRead() {

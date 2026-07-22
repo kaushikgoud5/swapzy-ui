@@ -80,7 +80,7 @@ export function Sidebar() {
                   <div className="relative">
                     <Icon 
                       className={`w-6 h-6 ${isActive ? 'text-purple-600' : 'text-muted-foreground'}`}
-                      fill={isActive && item.id === 'discover' ? 'none' : 'none'}
+                      fill="none"
                     />
                     {isActive && (
                       <motion.div
