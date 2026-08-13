@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 24 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 const demoCards = [
@@ -303,7 +303,7 @@ export function LandingPage() {
           </motion.div>
 
           <div className="grid gap-5 md:grid-cols-6">
-            {features.map((f, i) => (
+            {features.map((f) => (
               <motion.div
                 key={f.title}
                 variants={sectionVariants} initial="hidden" whileInView="show"

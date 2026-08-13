@@ -116,7 +116,7 @@ export function NotificationsPage() {
                     className="flex cursor-pointer items-start gap-3 rounded-[24px] p-4 ring-1 transition-all"
                     style={{
                       background: n.isRead ? 'var(--color-nearby-surface)' : 'var(--color-nearby-surface-2)',
-                      ringColor: n.isRead ? 'rgba(255,255,255,0.05)' : `rgba(255,90,95,0.15)`,
+                      ['--tw-ring-color' as string]: n.isRead ? 'rgba(255,255,255,0.05)' : 'rgba(255,90,95,0.15)',
                     }}
                   >
                     <div
