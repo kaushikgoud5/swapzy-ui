@@ -1,139 +1,159 @@
-import { ArrowLeftRight, MessageCircle, User, PlusCircle, LogOut, Bell } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { MapPin, Heart, MessageCircle, SquarePlus, Bell, User, Menu, House } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { authService } from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from './Toast';
 import { useUnreadNotifications } from '../utils/useUnreadNotifications';
 
+const navItems = [
+  { path: '/home/discover',       icon: House,         label: 'Discover' },
+  { path: '/home/sell',           icon: SquarePlus,    label: 'Create' },
+  { path: '/home/chat',           icon: MessageCircle, label: 'Chats',         badge: true },
+  { path: '/home/notifications',  icon: Bell,          label: 'Notifications', badge: true },
+  { path: '/home/profile',        icon: User,          label: 'Profile' },
+];
+
+const COLLAPSED_W = 72;
+const EXPANDED_W  = 240;
+
 export function Sidebar() {
-  const navigate = useNavigate();
+  const navigate   = useNavigate();
   const { pathname } = useLocation();
   const { showToast } = useToast();
-  const unreadCount = useUnreadNotifications();
+  const unreadCount   = useUnreadNotifications();
+  const [expanded, setExpanded] = useState(false);
 
   const handleLogout = async () => {
     await authService.logoutUser();
-    showToast('Logged out successfully', 'info');
+    showToast('Logged out', 'info');
     navigate('/login');
   };
 
-  const navItems = [
-    { path: '/home/discover', icon: ArrowLeftRight, label: 'Discover' },
-    { path: '/home/sell', icon: PlusCircle, label: 'Sell' },
-    { path: '/home/chat', icon: MessageCircle, label: 'Chats' },
-    { path: '/home/notifications', icon: Bell, label: 'Notifications' },
-    { path: '/home/profile', icon: User, label: 'Profile' },
-  ];
-
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-72 bg-white border-r border-gray-100 shadow-sm flex-col z-40">
+    <motion.aside
+      onHoverStart={() => setExpanded(true)}
+      onHoverEnd={()   => setExpanded(false)}
+      animate={{ width: expanded ? EXPANDED_W : COLLAPSED_W }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      className="hidden md:flex fixed left-0 top-0 bottom-0 flex-col z-50 overflow-hidden border-r border-white/5"
+      style={{ background: '#0F1115' }}
+    >
       {/* Logo */}
-      <div className="p-8 ">
-        <motion.div 
-          className="flex items-center gap-3"
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      <div
+        className="flex items-center px-4 py-7 cursor-pointer flex-shrink-0"
+        style={{ height: 72 }}
+        onClick={() => navigate('/home/discover')}
+      >
+        <div
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+          style={{ background: 'var(--color-nearby-coral)' }}
         >
-          <div className="relative">
-            <motion.div 
-              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-lg"
-              animate={{ 
-                boxShadow: [
-                  "0 10px 25px rgba(147, 51, 234, 0.3)",
-                  "0 10px 35px rgba(236, 72, 153, 0.4)",
-                  "0 10px 25px rgba(147, 51, 234, 0.3)",
-                ]
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          <MapPin className="h-5 w-5 text-white" strokeWidth={2.5} />
+        </div>
+        <AnimatePresence>
+          {expanded && (
+            <motion.span
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -6 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              className="ml-3 font-display text-lg font-bold whitespace-nowrap overflow-hidden"
+              style={{ color: 'var(--color-nearby-text)' }}
             >
-              <ArrowLeftRight className="w-6 h-6 text-white" />
-            </motion.div>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Swapzy
-            </h1>
-            <p className="text-xs text-muted-foreground">Swap smarter</p>
-          </div>
-        </motion.div>
+              Nearby
+            </motion.span>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <div className="space-y-2">
-          {navItems.map((item) => {
-            const isActive = pathname.startsWith(item.path);
-            const Icon = item.icon;
+      {/* Nav items */}
+      <nav className="flex-1 flex flex-col gap-1 px-3 py-2 justify-center">
+        {navItems.map(({ path, icon: Icon, label, badge }, idx) => {
+          const isActive = pathname.startsWith(path);
+          const count    = badge ? unreadCount : 0;
 
-            return (
-              <button key={item.path} onClick={() => navigate(item.path)} className="relative w-full group">
-                <motion.div
-                  className={`cursor-pointer flex items-center gap-4 px-4 py-3 rounded-xl transition-colors ${
-                    isActive 
-                      ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600' 
-                      : 'text-muted-foreground hover:bg-gray-50'
-                  }`}
-                  whileHover={{ scale: 1.02, x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                >
-                  <div className="relative">
-                    <Icon 
-                      className={`w-6 h-6 ${isActive ? 'text-purple-600' : 'text-muted-foreground'}`}
-                      fill="none"
-                    />
-                    {isActive && (
-                      <motion.div
-                        layoutId="sidebarActiveIndicator"
-                        className="absolute -left-8 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b from-purple-600 to-pink-600 rounded-full"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                  </div>
-                  
-                  <span className={`font-medium ${isActive ? 'text-purple-600' : ''}`}>
-                    {item.label}
+          return (
+            <button
+              key={`${path}-${idx}`}
+              onClick={() => navigate(path)}
+              className="relative flex items-center rounded-xl px-3 py-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-nearby-coral)] group"
+            >
+              {/* Hover bg */}
+              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                style={{ background: 'rgba(255,255,255,0.05)' }} />
+
+              {/* Icon + badge */}
+              <div className="relative flex-shrink-0">
+                <Icon
+                  className="h-7 w-7"
+                  strokeWidth={isActive ? 2.5 : 1.75}
+                  fill="none"
+                  style={{ color: isActive ? 'var(--color-nearby-coral)' : 'var(--color-nearby-text)' }}
+                />
+                {count > 0 && (
+                  <span
+                    className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white"
+                    style={{ background: '#ED4956' }}
+                  >
+                    {count > 9 ? '9+' : count}
                   </span>
+                )}
+              </div>
 
-                    {item.path === '/home/notifications' && unreadCount > 0 && (
-                    <span className="ml-auto px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-
-                  {isActive && item.path !== '/home/notifications' && (
-                    <motion.div
-                      className="ml-auto w-2 h-2 bg-purple-600 rounded-full"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                    />
-                  )}
-                </motion.div>
-              </button>
-            );
-          })}
-        </div>
+              {/* Label */}
+              <AnimatePresence>
+                {expanded && (
+                  <motion.span
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -6 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="ml-4 text-sm whitespace-nowrap overflow-hidden"
+                    style={{
+                      fontFamily: 'var(--font-sans)',
+                      fontWeight: isActive ? 700 : 400,
+                      color: 'var(--color-nearby-text)',
+                    }}
+                  >
+                    {label}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-6 space-y-3">
-        <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
-          <p className="text-xs text-purple-800 font-medium mb-1">💡 Pro Tip</p>
-          <p className="text-xs text-purple-700">
-            Swipe up to save items for later!
-          </p>
-        </div>
-        <motion.button
+      {/* More / logout */}
+      <div className="px-3 pb-6 flex-shrink-0">
+        <button
           onClick={handleLogout}
-          whileHover={{ scale: 1.02, x: 4 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
+          className="relative flex items-center rounded-xl px-3 py-4 w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-nearby-coral)] group"
         >
-          <LogOut className="w-5 h-5" />
-          <span className="text-sm font-medium">Log out</span>
-        </motion.button>
+          <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+            style={{ background: 'rgba(255,255,255,0.05)' }} />
+          <Menu
+            className="h-7 w-7 flex-shrink-0"
+            strokeWidth={1.75}
+            style={{ color: 'var(--color-nearby-text)' }}
+          />
+          <AnimatePresence>
+            {expanded && (
+              <motion.span
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="ml-4 text-sm whitespace-nowrap overflow-hidden"
+                style={{ fontFamily: 'var(--font-sans)', fontWeight: 400, color: 'var(--color-nearby-text)' }}
+              >
+                Log out
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
       </div>
-    </aside>
+    </motion.aside>
   );
 }

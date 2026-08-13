@@ -24,7 +24,7 @@ async function refreshAccessToken(): Promise<string | null> {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const newToken = data.token || data.accessToken;
+    const newToken = data.accessToken;
     if (newToken) {
       store.dispatch(setTokens({ token: newToken, refreshToken: data.refreshToken }));
       return newToken;
@@ -54,9 +54,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers: makeHeaders(getToken(), options.headers),
   });
 
-  if (res.status === 401) {
+  const isAuthEndpoint = endpoint.startsWith('/auth/');
+
+  if (res.status === 401 && !isAuthEndpoint) {
     if (isRefreshing) {
-      // Queue this request — resolved once the in-flight refresh completes
       return new Promise<T>((resolve, reject) => {
         refreshQueue.push((newToken) => {
           fetch(`${config.apiBaseUrl}${endpoint}`, {
@@ -77,7 +78,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     isRefreshing = false;
 
     if (newToken) {
-      // Drain the queue — each queued request gets the new token directly
       refreshQueue.forEach((cb) => cb(newToken));
       refreshQueue = [];
 
@@ -101,7 +101,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
     const msg = err.message || 'API request failed';
-    getToast().showToast(msg, 'error');
+    if (!isAuthEndpoint) getToast().showToast(msg, 'error');
     throw new Error(msg);
   }
 
