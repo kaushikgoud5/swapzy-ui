@@ -1,63 +1,70 @@
 import { motion } from 'framer-motion';
-import { MessageCircle, Sparkles } from 'lucide-react';
+import { MessageCircle, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function ChatPage() {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
-      <motion.div 
-        className="max-w-md w-full text-center"
-        initial={{ opacity: 0, y: 20 }}
+    <div
+      className="min-h-screen flex items-center justify-center p-5"
+      style={{ background: 'var(--color-nearby-bg)' }}
+    >
+      <motion.div
+        className="w-full max-w-md text-center"
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
+        {/* Icon blob */}
         <motion.div
-          className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 mb-6"
-          animate={{ 
-            scale: [1, 1.05, 1],
-            rotate: [0, 5, -5, 0]
-          }}
-          transition={{ 
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl"
+          style={{ background: 'var(--color-nearby-surface)' }}
+          animate={{ scale: [1, 1.04, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <MessageCircle className="w-12 h-12 text-purple-600" />
+          <MessageCircle className="h-9 w-9" style={{ color: 'var(--color-nearby-coral)' }} />
         </motion.div>
 
-        <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-          No Chats Yet
+        <h2 className="font-display text-3xl font-bold mb-3" style={{ color: 'var(--color-nearby-text)' }}>
+          No chats yet.
         </h2>
+        <p className="text-base mb-8 leading-relaxed" style={{ color: 'var(--color-nearby-dim)' }}>
+          Like something nearby — the seller gets notified and a chat opens right here.
+        </p>
 
-        <div className="space-y-4 text-muted-foreground">
-          <p className="text-base sm:text-lg">
-            Start swiping to discover amazing items! 
-          </p>
-          
-          <div className="flex items-center justify-center gap-2 text-xs sm:text-sm">
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            <span>When you and a seller both like an item, you'll be able to chat here</span>
-            <Sparkles className="w-4 h-4 text-purple-600" />
-          </div>
-
-          <div className="mt-6 sm:mt-8 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
-            <h3 className="font-semibold text-purple-900 mb-2">How it works:</h3>
-            <ol className="text-sm text-left space-y-2 text-purple-800">
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-200 text-purple-900 flex items-center justify-center text-xs font-bold">1</span>
-                <span>Swipe right on items you're interested in</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-200 text-purple-900 flex items-center justify-center text-xs font-bold">2</span>
-                <span>If the seller likes your profile, it's a match!</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-200 text-purple-900 flex items-center justify-center text-xs font-bold">3</span>
-                <span>Start chatting and arrange your swap</span>
-              </li>
-            </ol>
-          </div>
+        {/* Steps */}
+        <div
+          className="rounded-[24px] p-6 ring-1 ring-white/5 text-left space-y-4 mb-8"
+          style={{ background: 'var(--color-nearby-surface)' }}
+        >
+          {[
+            { n: '1', text: 'Swipe right on an item you want' },
+            { n: '2', text: 'Seller gets notified instantly' },
+            { n: '3', text: 'Chat opens — agree on a spot, meet up' },
+          ].map(({ n, text }) => (
+            <div key={n} className="flex items-center gap-3">
+              <span
+                className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full font-display text-xs font-bold"
+                style={{ background: 'rgba(255,90,95,0.15)', color: 'var(--color-nearby-coral)' }}
+              >
+                {n}
+              </span>
+              <span className="text-sm" style={{ color: 'var(--color-nearby-dim)' }}>{text}</span>
+            </div>
+          ))}
         </div>
+
+        <motion.button
+          onClick={() => navigate('/home/discover')}
+          whileHover={{ scale: 1.03, boxShadow: '0 20px 45px -12px rgba(255,90,95,0.55)' }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+          className="inline-flex items-center gap-2 rounded-2xl px-7 py-3.5 font-display text-sm font-semibold text-white"
+          style={{ background: 'var(--color-nearby-coral)', boxShadow: '0 12px 32px -10px rgba(255,90,95,0.6)' }}
+        >
+          Start swiping <ArrowRight className="h-4 w-4" />
+        </motion.button>
       </motion.div>
     </div>
   );

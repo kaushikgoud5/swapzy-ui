@@ -18,56 +18,6 @@ export interface CreateProductLocationDto {
   longitude?: number;
 }
 
-// ─── Onboarding ───
-
-export interface OnboardingRequestDto {
-  avatarUrl?: string;
-  displayName: string;
-  bio?: string;
-  preferredCategoryIds: number[];
-  location: OnboardingLocationDto;
-}
-
-// ─── Profile ───
-
-export interface UpdateProfileDto {
-  avatarUrl?: string;
-  displayName?: string;
-  bio?: string;
-  location?: OnboardingLocationDto;
-  preferredCategoryIds?: number[] | null;
-}
-
-// ─── Location DTOs ───
-
-export interface OnboardingLocationDto {
-  country: string;
-  state: string;
-  city: string;
-  postalCode?: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-export interface CreateProductLocationDto {
-  country: string;
-  state: string;
-  city: string;
-  postalCode: string;
-  latitude?: number;
-  longitude?: number;
-}
-
-// ─── Onboarding ───
-
-export interface OnboardingRequestDto {
-  avatarUrl?: string;
-  displayName: string;
-  bio?: string;
-  preferredCategoryIds: number[];
-  location: OnboardingLocationDto;
-}
-
 // ─── Profile ───
 
 export interface UpdateProfileDto {
@@ -92,6 +42,12 @@ export interface CreateProductDto {
 
 // ─── Feed ───
 
+export interface FeedProductImage {
+  id: number;
+  url: string;
+  displayOrder: number;
+}
+
 export interface FeedProduct {
   id: number;
   ownerId: string;
@@ -104,6 +60,7 @@ export interface FeedProduct {
   isAvailable: boolean;
   distanceKm: number;
   createdOn: string;
+  images: FeedProductImage[];
   location: {
     country: string;
     state: string;

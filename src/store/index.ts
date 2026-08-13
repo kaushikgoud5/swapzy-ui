@@ -2,9 +2,6 @@ import { configureStore, createSlice } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
-// Only stores what must survive a page refresh: tokens + minimal user identity.
-// loading/error are UI state — they live in the Auth page component.
 
 type User = { id: string; email: string; name: string };
 
@@ -34,8 +31,6 @@ const authSlice = createSlice({
     logout: () => ({ token: null, refreshToken: null, user: null }),
   },
 });
-
-// ── Store ─────────────────────────────────────────────────────────────────────
 
 export const store = configureStore({
   reducer: {
