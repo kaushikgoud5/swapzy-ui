@@ -4,7 +4,7 @@ import { ScrollToTop } from "../../components/ScrollToTop";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { DiscoveryPage } from "./DiscoveryPage";
 import { ProfileCreationPage } from "./ProfileCreationPage";
-import { ChatPage } from "./ChatPage";
+import { MatchesPage } from "./MatchesPage";
 import { ChatThread } from "./ChatThread";
 import { MyListingsPage } from "./MyListingsPage";
 import { CreateListingPage } from "./CreateListingPage";
@@ -19,7 +19,7 @@ function Home() {
         <Routes>
           <Route index element={<Navigate to="discover" replace />} />
           <Route path="discover" element={<DiscoveryPage />} />
-          <Route path="chat" element={<ChatPage />} />
+          <Route path="chat" element={<MatchesPage />} />
           <Route path="chat/:matchId" element={<ChatThread />} />
           <Route path="profile" element={<ProfileCreationPage />} />
           <Route path="sell" element={<MyListingsPage />} />

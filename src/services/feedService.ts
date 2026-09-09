@@ -1,11 +1,6 @@
 import { apiClient } from './apiClient';
 import type { FeedProduct, FeedResponse } from '../types/dto';
 
-export interface SwipeEntry {
-  productId: number;
-  direction: 0 | 1; // 0 = Like, 1 = Pass
-}
-
 export const feedService = {
   async getFeed(params: {
     latitude: number;
@@ -21,11 +16,10 @@ export const feedService = {
       page: String(params.page ?? 1),
       pageSize: String(params.pageSize ?? 20),
     });
-    return apiClient.get<FeedResponse>(`/feed?${q}`);
+    return apiClient.get<FeedResponse>(`/products/nearby?${q}`);
   },
 
-  // No lat/lng in body — backend doesn't accept them
-  async batchSwipe(swipes: SwipeEntry[]): Promise<void> {
-    await apiClient.post<any>('/swipes/batch', { swipes });
+  async expressInterest(productId: number): Promise<void> {
+    await apiClient.post<any>('/interests', { productId });
   },
 };
