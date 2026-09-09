@@ -1,17 +1,20 @@
 import { apiClient } from './apiClient';
-import type { Match, MatchesResponse } from '../types/dto';
+
+export interface MatchItem {
+  id: string;
+  interestId: string;
+  buyerId: string;
+  sellerId: string;
+  productId: number;
+  productName: string;
+  productImageUrl: string | null;
+  isSwapped: boolean;
+  createdOn: string;
+}
 
 export const matchService = {
-  async getMatches(page = 1, pageSize = 20): Promise<MatchesResponse> {
-    return apiClient.get<MatchesResponse>(`/matches?page=${page}&pageSize=${pageSize}`);
-  },
-
-  async getMatch(id: number): Promise<Match> {
-    const res = await apiClient.get<{ match: Match }>(`/matches/${id}`);
-    return res.match;
-  },
-
-  async cancelMatch(id: number): Promise<void> {
-    await apiClient.patch<any>(`/matches/${id}/cancel`, {});
-  },
+  getMatches: (page = 1, pageSize = 20) =>
+    apiClient.get<{ matches: MatchItem[]; hasMore: boolean }>(`/interests/matches?page=${page}&pageSize=${pageSize}`),
+  markSold: (productId: number) =>
+    apiClient.patch(`/products/${productId}/status?status=Sold`, {}),
 };

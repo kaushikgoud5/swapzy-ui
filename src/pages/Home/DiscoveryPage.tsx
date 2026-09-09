@@ -2,12 +2,25 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { feedService, type SwipeEntry } from '../../services/feedService';
+import { feedService } from '../../services/feedService';
 import { SwipeCard } from '../../components/SwipeCard';
 import type { FeedProduct } from '../../types/dto';
 
-const BATCH_SIZE = 10;
 const DEFAULT_COORDS = { latitude: 17.385, longitude: 78.4867 };
+const PASSED_KEY = 'swapzy_passed_ids';
+
+function getPassedIds(): Set<number> {
+  try { return new Set(JSON.parse(localStorage.getItem(PASSED_KEY) ?? '[]')); }
+  catch { return new Set(); }
+}
+
+function addPassedId(id: number) {
+  const ids = getPassedIds();
+  ids.add(id);
+  // keep last 500 to avoid unbounded growth
+  const arr = [...ids].slice(-500);
+  localStorage.setItem(PASSED_KEY, JSON.stringify(arr));
+}
 
 export function DiscoveryPage() {
   const qc = useQueryClient();
@@ -15,8 +28,7 @@ export function DiscoveryPage() {
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState<FeedProduct[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const swipeQueue = useRef<SwipeEntry[]>([]);
-  const swipedIds = useRef<Set<number>>(new Set());
+  const seenIds = useRef<Set<number>>(getPassedIds());
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -33,28 +45,24 @@ export function DiscoveryPage() {
 
   useEffect(() => {
     if (!data?.products) return;
-    const fresh = data.products.filter((p) => !swipedIds.current.has(p.id));
+    const fresh = data.products.filter((p) => !seenIds.current.has(p.id));
     setProducts((prev) => page === 1 ? fresh : [...prev, ...fresh]);
   }, [data, page]);
-
-  const flushSwipes = useCallback(async () => {
-    if (swipeQueue.current.length === 0) return;
-    const batch = [...swipeQueue.current];
-    swipeQueue.current = [];
-    try { await feedService.batchSwipe(batch); } catch { /* silent */ }
-  }, []);
-
-  useEffect(() => () => { flushSwipes(); }, [flushSwipes]);
 
   const handleSwipe = (direction: 'left' | 'right' | 'up') => {
     const product = products[currentIndex];
     if (!product) return;
-    swipedIds.current.add(product.id);
-    if (direction !== 'up') {
-      swipeQueue.current.push({ productId: product.id, direction: direction === 'right' ? 0 : 1 });
+
+    seenIds.current.add(product.id);
+
+    if (direction === 'right') {
+      feedService.expressInterest(product.id).catch(() => {});
+    } else {
+      // left or up — just persist as passed so it won't show again
+      addPassedId(product.id);
     }
+
     const nextIndex = currentIndex + 1;
-    if (nextIndex >= products.length || swipeQueue.current.length >= BATCH_SIZE) flushSwipes();
     setCurrentIndex(nextIndex);
     if (nextIndex >= products.length - 3 && data?.hasMore) {
       setPage((p) => p + 1);

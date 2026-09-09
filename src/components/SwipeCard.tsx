@@ -13,6 +13,7 @@ interface SwipeCardProps {
 
 export function SwipeCard({ product, onSwipe, onDetailView, style, isSaved }: SwipeCardProps) {
   const [exitDirection, setExitDirection] = useState<'left' | 'right' | 'up' | null>(null);
+  const [imageIndex, setImageIndex] = useState(0);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotate = useTransform(x, [-200, 0, 200], [-14, 0, 14]);
@@ -43,7 +44,8 @@ export function SwipeCard({ product, onSwipe, onDetailView, style, isSaved }: Sw
     exitDirection === 'left'  ? { x: -500, rotate: -22, opacity: 0 } :
     exitDirection === 'up'    ? { y: -800, opacity: 0 } : {};
 
-  const firstImage = product.images?.[0]?.url ?? null;
+  const images = product.images ?? [];
+  const currentImage = images[imageIndex]?.url ?? null;
   const locationText = product.location
     ? `${product.location.city}, ${product.location.state}`
     : `${product.distanceKm?.toFixed(1) ?? '?'} km away`;
@@ -72,14 +74,31 @@ export function SwipeCard({ product, onSwipe, onDetailView, style, isSaved }: Sw
           style={{ height: '60%' }}
           onClick={onDetailView}
         >
-          {firstImage ? (
-            <img src={firstImage} alt={product.name} className="h-full w-full object-cover" />
+          {currentImage ? (
+            <img src={currentImage} alt={product.name} className="h-full w-full object-cover" />
           ) : (
             <div
               className="h-full w-full flex items-center justify-center text-7xl"
               style={{ background: 'var(--color-nearby-surface-2)' }}
             >
               📦
+            </div>
+          )}
+
+          {/* Tap zones for image navigation */}
+          {images.length > 1 && (
+            <>
+              <div className="absolute left-0 top-0 h-full w-1/3 z-10" onClick={(e) => { e.stopPropagation(); setImageIndex((i) => Math.max(0, i - 1)); }} />
+              <div className="absolute right-0 top-0 h-full w-1/3 z-10" onClick={(e) => { e.stopPropagation(); setImageIndex((i) => Math.min(images.length - 1, i + 1)); }} />
+            </>
+          )}
+
+          {/* Dot indicators */}
+          {images.length > 1 && (
+            <div className="absolute top-2 left-0 right-0 flex justify-center gap-1 z-10">
+              {images.map((_, i) => (
+                <div key={i} className="h-1 rounded-full transition-all" style={{ width: i === imageIndex ? 16 : 6, background: i === imageIndex ? '#fff' : 'rgba(255,255,255,0.4)' }} />
+              ))}
             </div>
           )}
 
