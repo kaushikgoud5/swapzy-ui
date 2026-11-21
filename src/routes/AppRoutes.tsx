@@ -13,6 +13,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function WelcomeRoute() {
   const token = useAppSelector((state) => state.auth.token);
   if (!token) return <Navigate to="/login" replace />;
+  // Keep the flag in sessionStorage — OnboardingSplash removes it on mount.
+  // If it's already gone (e.g. page refresh on /welcome), go straight to /home.
   if (!sessionStorage.getItem('showWelcome')) return <Navigate to="/home" replace />;
   return <OnboardingSplash />;
 }

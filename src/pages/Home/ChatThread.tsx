@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowUp, Package, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, ArrowUp, Package, MoreHorizontal, Flag, LogOut } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { chatService } from '../../services/chatService';
 import { matchService } from '../../services/matchService';
 import { store } from '../../store';
+import { useToast } from '../../components/Toast';
 
 const QUICK_REPLIES = ['Is it still available?', 'Can you do a bit less?', 'When can I grab it?'];
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -15,15 +16,17 @@ export function ChatThread() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [input, setInput] = useState('');
+  const [showOptions, setShowOptions] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const userId = store.getState().auth.user?.id;
+  const { showToast } = useToast();
 
   const { data: matchesData } = useQuery({
     queryKey: ['matches'],
     queryFn: () => matchService.getMatches(),
     staleTime: 30_000,
   });
-  const match = matchesData?.matches.find((m) => m.id === matchId);
+  const match = matchesData?.matches.find((m) => String(m.id) === String(matchId));
 
   const { data, isLoading } = useQuery({
     queryKey: ['chat', matchId],
@@ -83,9 +86,41 @@ export function ChatThread() {
           )}
         </div>
 
-        <button className="h-9 w-9 flex items-center justify-center rounded-xl" style={{ color: 'var(--color-nearby-dim)' }}>
+        <button
+          onClick={() => setShowOptions((v) => !v)}
+          className="relative h-9 w-9 flex items-center justify-center rounded-xl"
+          style={{ color: 'var(--color-nearby-dim)' }}
+        >
           <MoreHorizontal className="h-4 w-4" />
+          <AnimatePresence>
+            {showOptions && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                transition={{ duration: 0.1 }}
+                className="absolute right-0 top-10 z-30 w-44 overflow-hidden rounded-2xl ring-1 ring-white/10"
+                style={{ background: 'var(--color-nearby-surface-2)' }}
+              >
+                <button
+                  onClick={() => { setShowOptions(false); showToast('Report submitted', 'info'); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-3 text-sm"
+                  style={{ color: 'var(--color-nearby-text)' }}
+                >
+                  <Flag className="h-4 w-4" style={{ color: 'var(--color-nearby-coral)' }} /> Report
+                </button>
+                <button
+                  onClick={() => { setShowOptions(false); navigate('/home/chat'); }}
+                  className="flex w-full items-center gap-2.5 px-4 py-3 text-sm"
+                  style={{ color: 'var(--color-nearby-text)' }}
+                >
+                  <LogOut className="h-4 w-4" style={{ color: 'var(--color-nearby-dim)' }} /> Leave chat
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </button>
+        {showOptions && <div className="fixed inset-0 z-20" onClick={() => setShowOptions(false)} />}
       </div>
 
       {/* Pinned item card */}

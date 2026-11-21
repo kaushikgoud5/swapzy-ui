@@ -58,7 +58,6 @@ export function DiscoveryPage() {
     if (direction === 'right') {
       feedService.expressInterest(product.id).catch(() => {});
     } else {
-      // left or up — just persist as passed so it won't show again
       addPassedId(product.id);
     }
 

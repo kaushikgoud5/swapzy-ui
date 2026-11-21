@@ -87,8 +87,9 @@ export function CreateListingPage() {
       await qc.invalidateQueries({ queryKey: LISTINGS_KEY });
       showToast('Listing published!', 'success');
       navigate('/home/sell');
-    } catch { /* silent — toast shown per-image */ }
-    finally { setSubmitting(false); }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to create listing', 'error');
+    } finally { setSubmitting(false); }
   };
 
   const cardClass = 'rounded-[24px] p-5 sm:p-6 ring-1 ring-white/5 space-y-4';

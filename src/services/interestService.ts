@@ -14,6 +14,9 @@ export const interestService = {
   getForSeller: (page = 1, pageSize = 20) =>
     apiClient.get<{ interests: Interest[]; hasMore: boolean }>(`/interests/seller?page=${page}&pageSize=${pageSize}`),
 
+  getForBuyer: (page = 1, pageSize = 20) =>
+    apiClient.get<{ interests: Interest[]; hasMore: boolean }>(`/interests/buyer?page=${page}&pageSize=${pageSize}`),
+
   updateStatus: (id: string, status: 1 | 2) => {
     const statusStr = status === 1 ? 'Accepted' : 'Rejected';
     return apiClient.patch<{ interest: Interest }>(`/interests/${id}/status?status=${statusStr}`, {});

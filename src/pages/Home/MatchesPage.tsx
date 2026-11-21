@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, X, Check, Package, MessageCircle, PartyPopper } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -47,20 +47,37 @@ function ConfettiBurst({ onDone }: { onDone: () => void }) {
 export function MatchesPage() {
   const [tab, setTab] = useState<Tab>('interests');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [interestsPage, setInterestsPage] = useState(1);
+  const [matchesPage, setMatchesPage] = useState(1);
+  const [allInterests, setAllInterests] = useState<Interest[]>([]);
+  const [allMatches, setAllMatches] = useState<MatchItem[]>([]);
   const qc = useQueryClient();
   const { showToast } = useToast();
   const navigate = useNavigate();
   const userId = store.getState().auth.user?.id;
 
   const { data: interestsData, isLoading: loadingInterests } = useQuery({
-    queryKey: ['seller-interests'],
-    queryFn: () => interestService.getForSeller(),
+    queryKey: ['seller-interests', interestsPage],
+    queryFn: () => interestService.getForSeller(interestsPage),
   });
 
   const { data: matchesData, isLoading: loadingMatches } = useQuery({
-    queryKey: ['matches'],
-    queryFn: () => matchService.getMatches(),
+    queryKey: ['matches', matchesPage],
+    queryFn: () => matchService.getMatches(matchesPage),
   });
+
+  // Accumulate pages
+  useEffect(() => {
+    if (interestsData?.interests) {
+      setAllInterests((prev) => interestsPage === 1 ? interestsData.interests : [...prev, ...interestsData.interests]);
+    }
+  }, [interestsData, interestsPage]);
+
+  useEffect(() => {
+    if (matchesData?.matches) {
+      setAllMatches((prev) => matchesPage === 1 ? matchesData.matches : [...prev, ...matchesData.matches]);
+    }
+  }, [matchesData, matchesPage]);
 
   const updateStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: 1 | 2 }) =>
@@ -69,6 +86,7 @@ export function MatchesPage() {
       qc.invalidateQueries({ queryKey: ['seller-interests'] });
       qc.invalidateQueries({ queryKey: ['matches'] });
       showToast(status === 1 ? 'Match accepted!' : 'Interest rejected', status === 1 ? 'success' : 'info');
+      if (status === 1) setMatchesPage(1); // reset to page 1 to see new match
     },
     onError: () => showToast('Failed to update', 'error'),
   });
@@ -83,8 +101,8 @@ export function MatchesPage() {
     onError: () => showToast('Failed to mark as sold', 'error'),
   });
 
-  const pending = interestsData?.interests.filter((i) => i.status === 0) ?? [];
-  const matches = matchesData?.matches ?? [];
+  const pending = allInterests.filter((i) => i.status === 0);
+  const matches = allMatches;
 
   return (
     <div className="min-h-screen p-5 pt-8" style={{ background: 'var(--color-nearby-bg)' }}>
@@ -175,6 +193,16 @@ export function MatchesPage() {
                       </div>
                     </motion.div>
                   ))}
+                  {interestsData?.hasMore && (
+                    <button
+                      onClick={() => setInterestsPage((p) => p + 1)}
+                      disabled={loadingInterests}
+                      className="w-full rounded-2xl py-2.5 font-display text-sm font-medium disabled:opacity-50"
+                      style={{ background: 'var(--color-nearby-surface)', color: 'var(--color-nearby-dim)' }}
+                    >
+                      {loadingInterests ? 'Loading…' : 'Load more'}
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -248,6 +276,16 @@ export function MatchesPage() {
                       </motion.div>
                     );
                   })}
+                  {matchesData?.hasMore && (
+                    <button
+                      onClick={() => setMatchesPage((p) => p + 1)}
+                      disabled={loadingMatches}
+                      className="w-full rounded-2xl py-2.5 font-display text-sm font-medium disabled:opacity-50"
+                      style={{ background: 'var(--color-nearby-surface)', color: 'var(--color-nearby-dim)' }}
+                    >
+                      {loadingMatches ? 'Loading…' : 'Load more'}
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>

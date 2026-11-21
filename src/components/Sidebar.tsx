@@ -5,6 +5,7 @@ import { authService } from '../services/authService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from './Toast';
 import { useUnreadNotifications } from '../utils/useUnreadNotifications';
+import { useUnreadMessages } from '../utils/useUnreadMessages';
 
 const navItems = [
   { path: '/home/discover',       icon: House,         label: 'Discover' },
@@ -22,6 +23,7 @@ export function Sidebar() {
   const { pathname } = useLocation();
   const { showToast } = useToast();
   const unreadCount   = useUnreadNotifications();
+  const unreadMessages = useUnreadMessages();
   const [expanded, setExpanded] = useState(false);
 
   const handleLogout = async () => {
@@ -69,9 +71,11 @@ export function Sidebar() {
 
       {/* Nav items */}
       <nav className="flex-1 flex flex-col gap-1 px-3 py-2 justify-center">
-        {navItems.map(({ path, icon: Icon, label, badge }, idx) => {
+        {navItems.map(({ path, icon: Icon, label }, idx) => {
           const isActive = pathname.startsWith(path);
-          const count    = badge ? unreadCount : 0;
+          const count = path === '/home/notifications' ? unreadCount
+                      : path === '/home/chat' ? unreadMessages
+                      : 0;
 
           return (
             <button

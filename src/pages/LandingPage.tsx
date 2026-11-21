@@ -369,8 +369,12 @@ export function LandingPage() {
             <span className="font-display text-sm font-bold" style={{ color: 'var(--color-nearby-text)' }}>Nearby</span>
           </div>
           <div className="flex gap-6 text-sm" style={{ color: 'var(--color-nearby-dim)' }}>
-            {['Privacy', 'Terms', 'Contact'].map((l) => (
-              <button key={l} className="transition-colors hover:text-white">{l}</button>
+            {[
+              { label: 'Privacy', href: '/privacy' },
+              { label: 'Terms', href: '/terms' },
+              { label: 'Contact', href: 'mailto:hello@nearby.app' },
+            ].map(({ label, href }) => (
+              <a key={label} href={href} className="transition-colors hover:text-white">{label}</a>
             ))}
           </div>
           <p className="text-xs" style={{ color: 'var(--color-nearby-dim)' }}>© 2025 Nearby. All rights reserved.</p>

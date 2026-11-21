@@ -64,9 +64,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
             ...options,
             headers: makeHeaders(newToken, options.headers),
           })
-            .then((r) => {
-              if (!r.ok) reject(new Error('Request failed after token refresh'));
-              else r.json().then(resolve).catch(reject);
+            .then(async (r) => {
+              if (!r.ok) {
+                if (r.status === 401) forceLogout();
+                const err = await r.json().catch(() => ({ message: r.statusText }));
+                reject(new Error(err.message || 'Request failed after token refresh'));
+              } else {
+                r.json().then(resolve).catch(reject);
+              }
             })
             .catch(reject);
         });
