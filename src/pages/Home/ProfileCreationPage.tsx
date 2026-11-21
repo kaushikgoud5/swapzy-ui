@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Edit2, Save, X, LogOut, Camera } from 'lucide-react';
+import { Edit2, Save, X, LogOut, Camera, Loader2 } from 'lucide-react';
 import { useAppSelector } from '../../store';
 import { authService } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import { useProfile, useUpdateProfile } from '../../hooks/useProfile';
 import { useCategories } from '../../hooks/useCategories';
 import { useListings } from '../../hooks/useListings';
 import { getInitials } from '../../utils/initials';
+import { imageService } from '../../services/imageService';
 
 const inputClass = 'w-full rounded-xl px-3 py-2 text-sm outline-none ring-1 ring-white/5 focus:ring-2 focus:ring-[color:var(--color-nearby-coral)] transition placeholder:text-[color:var(--color-nearby-dim)]';
 
@@ -24,6 +25,8 @@ export function ProfileCreationPage() {
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({ name: '', bio: '' });
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (p) setDraft({ name: p.displayName || p.name || '', bio: p.bio || '' });
@@ -36,6 +39,32 @@ export function ProfileCreationPage() {
     await updateProfile.mutateAsync({ displayName: draft.name, bio: draft.bio });
     setEditing(false);
     showToast('Profile updated', 'success');
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!avatarRef.current) avatarRef.current = null;
+    if (avatarRef.current) avatarRef.current.value = '';
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      // Upload avatar via profile endpoint
+      const res = await fetch(`${(await import('../../config/env')).config.apiBaseUrl}/profile/avatar`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${(await import('../../store')).store.getState().auth.token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const { avatarUrl } = await res.json();
+      await updateProfile.mutateAsync({ avatarUrl });
+      showToast('Avatar updated', 'success');
+    } catch {
+      showToast('Failed to upload avatar', 'error');
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   const listings = listingsData?.products ?? [];
@@ -80,12 +109,19 @@ export function ProfileCreationPage() {
               }
             </div>
             {editing && (
-              <button
-                className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full ring-2 ring-[color:var(--color-nearby-bg)]"
-                style={{ background: 'var(--color-nearby-surface-2)' }}
-              >
-                <Camera className="h-3 w-3" style={{ color: 'var(--color-nearby-text)' }} />
-              </button>
+              <>
+                <button
+                  onClick={() => avatarRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full ring-2 ring-[color:var(--color-nearby-bg)] disabled:opacity-60"
+                  style={{ background: 'var(--color-nearby-surface-2)' }}
+                >
+                  {avatarUploading
+                    ? <Loader2 className="h-3 w-3 animate-spin" style={{ color: 'var(--color-nearby-text)' }} />
+                    : <Camera className="h-3 w-3" style={{ color: 'var(--color-nearby-text)' }} />}
+                </button>
+                <input ref={avatarRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
+              </>
             )}
           </div>
 

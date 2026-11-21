@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Mail, Lock, Eye, EyeOff, ArrowRight, User } from 'lucide-react';
+import { MapPin, Mail, Lock, Eye, EyeOff, ArrowRight, User, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../store';
 import { authService, commitAuth } from '../services/authService';
 import { initGoogleLogin } from '../services/socialAuth';
 import { useToast } from '../components/Toast';
+import { apiClient } from '../services/apiClient';
 
 const GoogleIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -18,6 +19,9 @@ const GoogleIcon = () => (
 
 export function Auth() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgot, setIsForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,6 +56,20 @@ export function Auth() {
       }
     } catch (e) {
       console.log(e)
+      setError(e instanceof Error ? e.message : 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      await apiClient.post('/auth/forgot-password', { email: forgotEmail });
+      setForgotSent(true);
+    } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setLoading(false);
@@ -104,10 +122,10 @@ export function Auth() {
           </div>
           <div className="text-center">
             <h1 className="font-display text-2xl font-bold" style={{ color: 'var(--color-nearby-text)' }}>
-              {isLogin ? 'Welcome back' : 'Join Nearby'}
+              {isForgot ? 'Reset password' : isLogin ? 'Welcome back' : 'Join Nearby'}
             </h1>
             <p className="mt-1 text-sm" style={{ color: 'var(--color-nearby-dim)' }}>
-              {isLogin ? 'Good to see you again.' : 'Find stuff two blocks away.'}
+              {isForgot ? "We'll send a reset link to your email." : isLogin ? 'Good to see you again.' : 'Find stuff two blocks away.'}
             </p>
           </div>
         </motion.div>
@@ -139,7 +157,56 @@ export function Auth() {
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-4" autoComplete='off'>
+          {/* ── Forgot password view ── */}
+          {isForgot ? (
+            forgotSent ? (
+              <div className="text-center py-4">
+                <p className="text-3xl mb-3">📬</p>
+                <p className="font-display font-semibold mb-1" style={{ color: 'var(--color-nearby-text)' }}>Check your inbox</p>
+                <p className="text-sm mb-5" style={{ color: 'var(--color-nearby-dim)' }}>A reset link was sent to <strong>{forgotEmail}</strong></p>
+                <button
+                  onClick={() => { setIsForgot(false); setForgotSent(false); setForgotEmail(''); }}
+                  className="font-display text-sm font-semibold"
+                  style={{ color: 'var(--color-nearby-coral)' }}
+                >
+                  Back to login
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div>
+                  <label className="mb-1.5 block font-display text-sm font-semibold" style={{ color: 'var(--color-nearby-text)' }}>Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-nearby-dim)' }} />
+                    <input
+                      type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="you@example.com" required
+                      className={inputClass + ' pl-10'}
+                      style={{ background: 'var(--color-nearby-surface-2)', color: 'var(--color-nearby-text)' }}
+                    />
+                  </div>
+                </div>
+                <motion.button
+                  type="submit" disabled={loading}
+                  whileHover={{ scale: loading ? 1 : 1.03 }} whileTap={{ scale: loading ? 1 : 0.97 }}
+                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-display text-base font-semibold text-white disabled:opacity-60"
+                  style={{ background: 'var(--color-nearby-coral)' }}
+                >
+                  {loading ? 'Sending…' : 'Send reset link'} {!loading && <ArrowRight className="h-5 w-5" />}
+                </motion.button>
+                <button
+                  type="button"
+                  onClick={() => { setIsForgot(false); setError(null); }}
+                  className="flex w-full items-center justify-center gap-1.5 text-sm mt-1"
+                  style={{ color: 'var(--color-nearby-dim)' }}
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> Back to login
+                </button>
+              </form>
+            )
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete='off'>
             {/* Name field (signup only) */}
             <AnimatePresence>
               {!isLogin && (
@@ -191,9 +258,21 @@ export function Auth() {
 
             {/* Password */}
             <div>
-              <label className="mb-1.5 block font-display text-sm font-semibold" style={{ color: 'var(--color-nearby-text)' }}>
-                Password
-              </label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="font-display text-sm font-semibold" style={{ color: 'var(--color-nearby-text)' }}>
+                  Password
+                </label>
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgot(true); setError(null); }}
+                    className="font-display text-xs"
+                    style={{ color: 'var(--color-nearby-coral)' }}
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-nearby-dim)' }} />
                 <input
@@ -266,6 +345,8 @@ export function Auth() {
               {isLogin ? 'Sign up' : 'Log in'}
             </button>
           </p>
+            </>
+          )}
         </motion.div>
       </div>
     </div>
